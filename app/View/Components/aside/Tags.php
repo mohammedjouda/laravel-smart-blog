@@ -1,19 +1,20 @@
 <?php
 
-namespace App\View\Components\layout;
+namespace App\View\Components\Aside;
 
 use Closure;
 use Illuminate\Contracts\View\View;
 use Illuminate\View\Component;
 
-class main-layout.blade extends Component
+class Tags extends Component
 {
+    public $tags;
     /**
      * Create a new component instance.
      */
     public function __construct()
     {
-        //
+        $this->tags = \App\Models\Tag::all();
     }
 
     /**
@@ -21,6 +22,6 @@ class main-layout.blade extends Component
      */
     public function render(): View|Closure|string
     {
-        return view('components.layout.main-layout.blade.php');
+        return view('components.aside.tags');
     }
 }
