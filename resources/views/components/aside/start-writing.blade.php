@@ -1,5 +1,5 @@
 <!-- CTA Box -->
-<div class="bg-on-surface text-white p-8 rounded-lg flex flex-col gap-4 group cursor-pointer relative overflow-hidden">
+<a href="{{ route('dashboard.posts.create') }}" class="bg-on-surface text-white p-8 rounded-lg flex flex-col gap-4 group cursor-pointer relative overflow-hidden">
     <div class="relative z-10">
         <h4 class="font-headline-md text-headline-md">Start writing</h4>
         <p class="font-label-md text-on-secondary-fixed-variant mb-6">Share your stories with our
@@ -12,4 +12,4 @@
     <div class="absolute right-[-20px] bottom-[-20px] opacity-10 scale-150 rotate-12">
         <span class="material-symbols-outlined text-[160px]">edit_note</span>
     </div>
-</div>
+</a>
