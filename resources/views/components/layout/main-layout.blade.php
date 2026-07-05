@@ -17,6 +17,8 @@
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
         rel="stylesheet">
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script defer src="https://cloudflare.com"></script>
+
     <style>
         .material-symbols-outlined {
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
@@ -151,43 +153,159 @@
 
 <body class="bg-background text-on-surface font-body-md overflow-x-hidden">
     <!-- Top Navigation Bar -->
-    <nav class="bg-background dark:bg-background border-b border-outline-variant/30 docked full-width top-0 z-50">
-        <div class="flex justify-between items-center w-full px-margin-desktop py-4 max-w-container-max mx-auto">
-            <!-- Brand & Search -->
-            <div class="flex items-center gap-stack-lg flex-1">
-                <span
-                    class="font-headline-lg text-headline-lg font-bold text-on-surface dark:text-inverse-on-surface">Paperink</span>
-                <div
-                    class="hidden md:flex items-center bg-surface-container-low px-4 py-2 rounded-full border border-outline-variant/20 w-80">
-                    <span class="material-symbols-outlined text-on-surface-variant mr-2">search</span>
-                    <input
-                        class="bg-transparent border-none outline-none text-body-md w-full placeholder:text-on-surface-variant/50 focus:ring-0"
-                        placeholder="Search articles, tags, authors" type="text">
+    <nav class="bg-background border-b border-outline-variant/30 sticky top-0 z-50">
+        <div class="flex justify-between items-center w-full px-gutter max-w-container-max mx-auto h-20">
+
+            <!-- Logo + Navigation -->
+            <div class="flex items-center gap-10">
+                <a href="{{ route('home') }}" class="font-display text-3xl font-bold text-on-surface">
+                    Paperink
+                </a>
+
+                <div class="hidden md:flex gap-8">
+
+                    <a href="{{ route('home') }}"
+                        class="font-ui text-sm transition-colors pb-1 border-b-2
+                    {{ request()->routeIs('home')
+                        ? 'text-primary font-bold border-primary'
+                        : 'text-on-surface-variant font-semibold border-transparent hover:text-primary' }}">
+                        Feed
+                    </a>
+
+                    <a href="{{ route('authors') }}"
+                        class="font-ui text-sm transition-colors pb-1 border-b-2
+                    {{ request()->routeIs('authors')
+                        ? 'text-primary font-bold border-primary'
+                        : 'text-on-surface-variant font-semibold border-transparent hover:text-primary' }}">
+                        Authors
+                    </a>
+
+                    <a href="{{ route('dashboard') }}"
+                        class="font-ui text-sm transition-colors pb-1 border-b-2
+                    {{ request()->routeIs('dashboard')
+                        ? 'text-primary font-bold border-primary'
+                        : 'text-on-surface-variant font-semibold border-transparent hover:text-primary' }}">
+                        Dashboard
+                    </a>
+
+                    <a href="{{ route('profile') }}"
+                        class="font-ui text-sm transition-colors pb-1 border-b-2
+                    {{ request()->routeIs('profile')
+                        ? 'text-primary font-bold border-primary'
+                        : 'text-on-surface-variant font-semibold border-transparent hover:text-primary' }}">
+                        Profile
+                    </a>
+
                 </div>
             </div>
-            <!-- Navigation Links -->
-            <div class="hidden md:flex items-center gap-gutter px-8">
-                <a class="text-primary dark:text-primary-fixed-dim font-bold border-b-2 border-primary py-1 hover:text-primary transition-colors font-label-md text-label-md"
-                    href="#">Feed</a>
-                <a class="text-on-surface-variant dark:text-on-secondary-container font-label-md text-label-md hover:text-primary transition-colors"
-                    href="#">Authors</a>
-                <a class="text-on-surface-variant dark:text-on-secondary-container font-label-md text-label-md hover:text-primary transition-colors"
-                    href="#">Dashboard</a>
-                <a class="text-on-surface-variant dark:text-on-secondary-container font-label-md text-label-md hover:text-primary transition-colors"
-                    href="#">Profile</a>
-            </div>
-            <!-- Actions -->
-            <div class="flex items-center gap-stack-md">
-                <button
-                    class="bg-primary-container text-on-primary px-6 py-2 rounded-full font-label-md text-label-md hover:bg-primary transition-all active:scale-95 duration-100 flex items-center gap-2">
-                    <span class="material-symbols-outlined text-sm">edit</span>
+
+            <!-- Right Side -->
+            <div class="flex items-center gap-6">
+
+                <!-- Search -->
+                <form action="{{ route('home') }}" method="GET"
+                    class="hidden sm:flex items-center bg-surface-container-low px-4 py-2 rounded-full border border-outline-variant/20 w-64">
+                    <span class="material-symbols-outlined text-on-surface-variant text-[20px] mr-2">
+                        search
+                    </span>
+
+                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Search articles..."
+                        class="bg-transparent border-none focus:ring-0 text-sm w-full placeholder:text-on-surface-variant/50">
+                </form>
+
+                <!-- Write -->
+                <a href="#"
+                    class="hidden md:flex items-center gap-2 bg-primary text-on-primary px-5 py-2 rounded-full text-sm font-semibold hover:opacity-90 transition">
+                    <span class="material-symbols-outlined text-[18px]">edit</span>
                     Write
-                </button>
-                <div class="flex items-center gap-2">
-                    <span
-                        class="material-symbols-outlined text-on-surface-variant text-3xl cursor-pointer hover:text-primary transition-colors">account_circle</span>
+                </a>
+
+                <!-- Notifications -->
+                @auth
+                    <button class="text-on-surface-variant hover:text-primary transition-colors relative">
+                        <span class="material-symbols-outlined">notifications</span>
+                        <span class="absolute top-0 right-0 h-2 w-2 bg-primary rounded-full"></span>
+                    </button>
+                @endauth
+
+                <!-- Avatar -->
+                <div class="relative group">
+
+                    <button class="h-10 w-10 rounded-full overflow-hidden border border-outline-variant/30">
+                        @auth
+                            @if (auth()->user()->avatar)
+                                <img src="{{ Storage::url(auth()->user()->avatar) }}"
+                                    class="h-full w-full object-cover" alt="{{ auth()->user()->name }}">
+                            @else
+                                <img src="https://ui-avatars.com/api/?name={{ urlencode(auth()->user()->name) }}&background=8b0e0f&color=fff"
+                                    class="h-full w-full object-cover" alt="{{ auth()->user()->name }}">
+                            @endif
+                        @else
+                            <span class="material-symbols-outlined text-4xl text-on-surface-variant">
+                                account_circle
+                            </span>
+                        @endauth
+                    </button>
+
+                    <!-- Dropdown -->
+                    <div
+                        class="absolute right-0 mt-2 w-56 rounded-2xl bg-surface border border-surface-variant/20 shadow-xl py-2 z-50 invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-all duration-200">
+
+                        @auth
+
+                            <div class="px-4 py-2 border-b border-surface-variant/10 mb-1">
+                                <p class="text-xs text-on-surface-variant/60">
+                                    Signed in as
+                                </p>
+
+                                <p class="text-sm font-semibold truncate">
+                                    {{ auth()->user()->email }}
+                                </p>
+                            </div>
+
+                            <a href="{{ route('profile') }}"
+                                class="flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-primary/5 hover:text-primary">
+                                <span class="material-symbols-outlined">person</span>
+                                My Profile
+                            </a>
+
+                            <a href="{{ route('user-profile-information.update') }}"
+                                class="flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-primary/5 hover:text-primary">
+                                <span class="material-symbols-outlined">settings</span>
+                                Settings
+                            </a>
+
+                            <div class="border-t border-surface-variant/10 my-1"></div>
+
+                            <form action="{{ route('logout') }}" method="POST">
+                                @csrf
+                                <button
+                                    class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-error hover:bg-error/5">
+                                    <span class="material-symbols-outlined">logout</span>
+                                    Sign Out
+                                </button>
+                            </form>
+                        @else
+                            <a href="{{ route('login') }}"
+                                class="flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-primary/5 hover:text-primary">
+                                <span class="material-symbols-outlined">login</span>
+                                Sign In
+                            </a>
+
+                            <a href="{{ route('register') }}"
+                                class="flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-primary/5 hover:text-primary">
+                                <span class="material-symbols-outlined">person_add</span>
+                                Create Account
+                            </a>
+
+                        @endauth
+
+                    </div>
+
                 </div>
+
             </div>
+
         </div>
     </nav>
     {{ $slot }}
