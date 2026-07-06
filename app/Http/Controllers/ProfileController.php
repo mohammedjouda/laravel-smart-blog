@@ -37,6 +37,22 @@ class ProfileController extends Controller
             $isFollower = auth()->user()->followers()->where('follower_id', $user->id)->exists();
         }
 
-        return view('profile', compact('user', 'posts', 'isFollowing', 'isFollower'));
+        $similarAuthors = User::query()
+            ->whereKeyNot($user->id)
+            ->when(auth()->check(), function ($query) {
+                $query->whereKeyNot(auth()->id());
+            })
+            ->when($user->field, function ($query, $field) {
+                $query->orderByRaw("field = ? DESC", [$field]);
+            })
+            ->inRandomOrder()
+            ->limit(3)
+            ->get();
+
+        $followedIds = auth()->check()
+            ? auth()->user()->followed()->pluck('users.id')->toArray()
+            : [];
+
+        return view('profile', compact('user', 'posts', 'isFollowing', 'isFollower', 'similarAuthors', 'followedIds'));
     }
 }
