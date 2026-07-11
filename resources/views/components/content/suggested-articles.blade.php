@@ -53,10 +53,13 @@
                             @endforeach
                         @endif
                         <span class="font-label-md text-[12px] text-on-surface-variant">14 min read</span>
-                    </div>
+                    @php 
+                        $isBookmarked = auth()->check() && auth()->user()->bookmarks()->where('post_id', $post->id)->exists();
+                    @endphp
                     <div class="flex items-center gap-4 text-on-surface-variant">
-                        <span
-                            class="material-symbols-outlined text-xl hover:text-on-surface transition-colors">bookmark</span>
+                        <span onclick="event.stopPropagation(); toggleBookmark(this, '{{ $post->slug }}')" data-bookmark-slug="{{ $post->slug }}"
+                            class="material-symbols-outlined text-xl hover:text-on-surface transition-colors cursor-pointer {{ $isBookmarked ? 'text-primary' : '' }}"
+                            {!! $isBookmarked ? 'style="font-variation-settings: \'FILL\' 1;"' : '' !!}>bookmark</span>
                         <span
                             class="material-symbols-outlined text-xl hover:text-on-surface transition-colors">more_horiz</span>
                     </div>

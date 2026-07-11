@@ -130,7 +130,12 @@
                                                 {{ max(1, ceil(str_word_count(strip_tags($post->content)) / 200)) }} min read
                                             </span>
                                         </div>
-                                        <span class="material-symbols-outlined text-on-surface-variant hover:text-primary cursor-pointer" data-icon="bookmark">bookmark</span>
+                                        @php
+                                             $isBookmarked = auth()->check() && auth()->user()->bookmarks()->where('post_id', $post->id)->exists();
+                                         @endphp
+                                         <span onclick="toggleBookmark(this, '{{ $post->slug }}')" data-bookmark-slug="{{ $post->slug }}"
+                                             class="material-symbols-outlined hover:text-primary cursor-pointer {{ $isBookmarked ? 'text-primary' : 'text-on-surface-variant' }}"
+                                             {!! $isBookmarked ? 'style="font-variation-settings: \'FILL\' 1;"' : '' !!}>bookmark</span>
                                     </div>
                                 </div>
                                 @if ($post->cover_image)
@@ -196,12 +201,70 @@
                 </div>
 
                 <!-- Reading List Tab Content -->
-                <div id="content-reading" class="hidden bg-surface-container-low p-8 rounded-xl text-center py-16">
-                    <span class="material-symbols-outlined text-5xl text-outline mb-4">bookmarks</span>
-                    <h4 class="font-headline-sm text-headline-sm text-on-surface mb-2">Reading List</h4>
-                    <p class="text-on-surface-variant max-w-md mx-auto">
-                        Reading lists and bookmarks are private. Bookmarked articles will be saved here in a future update.
-                    </p>
+                <div id="content-reading" class="hidden space-y-12">
+                    @if (auth()->check() && auth()->id() === $user->id)
+                        @forelse ($bookmarkedPosts as $post)
+                            <article class="group">
+                                <div class="flex flex-col md:flex-row gap-8 items-start">
+                                    <div class="flex-1 order-2 md:order-1">
+                                        <div class="flex items-center gap-3 mb-3">
+                                            <span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-widest">{{ $post->category?->name ?? 'Article' }}</span>
+                                            <span class="text-outline-variant">•</span>
+                                            <span class="font-label-md text-label-md text-on-surface-variant">{{ $post->created_at->format('M d, Y') }}</span>
+                                        </div>
+                                        <h3 class="font-headline-md text-headline-md mb-3 group-hover:text-primary transition-colors">
+                                            <a href="{{ route('posts.show', $post->slug) }}">{{ $post->title }}</a>
+                                        </h3>
+                                        <p class="font-body-md text-body-md text-on-surface-variant mb-4 line-clamp-3">
+                                            {{ $post->excerpt ?? Str::limit(strip_tags($post->content), 200) }}
+                                        </p>
+                                        <div class="flex items-center justify-between">
+                                            <div class="flex items-center gap-4">
+                                                @if ($post->tags->isNotEmpty())
+                                                    @foreach ($post->tags as $tag)
+                                                        <span class="bg-surface-container-high px-3 py-1 rounded-full text-label-md font-label-md text-on-surface-variant">#{{ $tag->name }}</span>
+                                                    @endforeach
+                                                @endif
+                                                <span class="font-label-md text-label-md text-on-surface-variant flex items-center gap-1">
+                                                    <span class="material-symbols-outlined text-[14px]">auto_stories</span> 
+                                                    {{ max(1, ceil(str_word_count(strip_tags($post->content)) / 200)) }} min read
+                                                </span>
+                                            </div>
+                                            <span onclick="toggleBookmark(this, '{{ $post->slug }}')" data-bookmark-slug="{{ $post->slug }}"
+                                                class="material-symbols-outlined text-primary hover:text-primary cursor-pointer"
+                                                style="font-variation-settings: 'FILL' 1;">bookmark</span>
+                                        </div>
+                                    </div>
+                                    @if ($post->cover_image)
+                                        <div class="w-full md:w-48 h-48 md:h-32 rounded-lg overflow-hidden order-1 md:order-2 bg-surface-container shadow-sm">
+                                            <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                                                 alt="{{ $post->title }}" 
+                                                 src="{{ \Illuminate\Support\Str::startsWith($post->cover_image, ['http://', 'https://']) ? $post->cover_image : Storage::url($post->cover_image) }}">
+                                        </div>
+                                    @endif
+                                </div>
+                            </article>
+                            @if (!$loop->last)
+                                <div class="h-[1px] bg-outline-variant/30"></div>
+                            @endif
+                        @empty
+                            <div class="text-center py-16 bg-surface-container-low p-8 rounded-xl">
+                                <span class="material-symbols-outlined text-5xl text-outline mb-4">bookmarks</span>
+                                <h4 class="font-headline-sm text-headline-sm text-on-surface mb-2">Your reading list is empty</h4>
+                                <p class="text-on-surface-variant max-w-md mx-auto">
+                                    Articles you bookmark will appear here.
+                                </p>
+                            </div>
+                        @endforelse
+                    @else
+                        <div class="text-center py-16 bg-surface-container-low p-8 rounded-xl">
+                            <span class="material-symbols-outlined text-5xl text-outline mb-4">lock</span>
+                            <h4 class="font-headline-sm text-headline-sm text-on-surface mb-2">Reading List is Private</h4>
+                            <p class="text-on-surface-variant max-w-md mx-auto">
+                                {{ $user->name }}'s reading list is private.
+                            </p>
+                        </div>
+                    @endif
                 </div>
             </div>
 

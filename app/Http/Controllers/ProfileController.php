@@ -53,6 +53,14 @@ class ProfileController extends Controller
             ? auth()->user()->followed()->pluck('users.id')->toArray()
             : [];
 
-        return view('profile', compact('user', 'posts', 'isFollowing', 'isFollower', 'similarAuthors', 'followedIds'));
+        $bookmarkedPosts = [];
+        if (auth()->check() && auth()->id() === $user->id) {
+            $bookmarkedPosts = $user->bookmarks()
+                ->with(['category', 'tags', 'user'])
+                ->latest()
+                ->get();
+        }
+
+        return view('profile', compact('user', 'posts', 'isFollowing', 'isFollower', 'similarAuthors', 'followedIds', 'bookmarkedPosts'));
     }
 }

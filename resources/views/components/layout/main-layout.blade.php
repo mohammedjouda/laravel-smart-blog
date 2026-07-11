@@ -4,6 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Paperink — Home Feed</title>
     <!-- Material Symbols -->
     <link
@@ -418,6 +419,88 @@
                 lastScroll = currentScroll;
             });
         });
+
+        window.toggleBookmark = async function(button, slug) {
+            try {
+                const response = await fetch(`/posts/${slug}/bookmark`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.status === 401) {
+                    window.location.href = '/login';
+                    return;
+                }
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    const allBookmarkButtons = document.querySelectorAll(`[data-bookmark-slug="${slug}"]`);
+                    
+                    allBookmarkButtons.forEach(btn => {
+                        const icon = btn.querySelector('.material-symbols-outlined') || btn;
+                        if (data.bookmarked) {
+                            icon.style.fontVariationSettings = "'FILL' 1";
+                            btn.classList.add('text-primary');
+                            icon.classList.add('text-primary');
+                        } else {
+                            icon.style.fontVariationSettings = "'FILL' 0";
+                            btn.classList.remove('text-primary');
+                            icon.classList.remove('text-primary');
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error('Error toggling bookmark:', error);
+            }
+        };
+
+        window.toggleLike = async function(button, slug) {
+            try {
+                const response = await fetch(`/posts/${slug}/like`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.status === 401) {
+                    window.location.href = '/login';
+                    return;
+                }
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    const allLikeButtons = document.querySelectorAll(`[data-like-slug="${slug}"]`);
+                    
+                    allLikeButtons.forEach(btn => {
+                        const icon = btn.querySelector('.material-symbols-outlined') || btn;
+                        const countSpan = btn.querySelector('.like-count');
+                        
+                        if (data.liked) {
+                            icon.style.fontVariationSettings = "'FILL' 1";
+                            icon.classList.add('text-primary');
+                            btn.classList.add('text-primary');
+                        } else {
+                            icon.style.fontVariationSettings = "'FILL' 0";
+                            icon.classList.remove('text-primary');
+                            btn.classList.remove('text-primary');
+                        }
+                        
+                        if (countSpan) {
+                            countSpan.textContent = data.likes_count;
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error('Error toggling like:', error);
+            }
+        };
     </script>
 </body>
 

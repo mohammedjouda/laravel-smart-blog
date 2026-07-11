@@ -72,11 +72,21 @@ class PostController extends Controller
 
         $post->increment('views');
         $post->load(['category', 'user', 'tags']);
+        $post->loadCount(['likes', 'comments']);
 
         $isFollowing = false;
-        if (auth()->check() && auth()->id() !== $post->user_id) {
-            $isFollowing = auth()->user()->followed()->where('followed_id', $post->user_id)->exists();
+        $isLiked = false;
+        $isBookmarked = false;
+
+        if (auth()->check()) {
+            if (auth()->id() !== $post->user_id) {
+                $isFollowing = auth()->user()->followed()->where('followed_id', $post->user_id)->exists();
+            }
+            $isLiked = $post->likes()->where('user_id', auth()->id())->exists();
+            $isBookmarked = $post->bookmarks()->where('user_id', auth()->id())->exists();
         }
+
+        $comments = $post->comments()->with('user')->latest()->get();
 
         $suggestions = Post::with(['category', 'user'])
             ->where('status', 'published')
@@ -89,6 +99,9 @@ class PostController extends Controller
             'post' => $post,
             'publicView' => true,
             'isFollowing' => $isFollowing,
+            'isLiked' => $isLiked,
+            'isBookmarked' => $isBookmarked,
+            'comments' => $comments,
             'suggestions' => $suggestions,
         ]);
     }

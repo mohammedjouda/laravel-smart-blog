@@ -37,9 +37,9 @@
                             class="w-10 h-10 rounded-full border border-outline-variant/40 flex items-center justify-center hover:bg-surface-container-low transition-colors text-on-surface-variant">
                             <span class="material-symbols-outlined text-[20px]">share</span>
                         </button>
-                        <button
-                            class="w-10 h-10 rounded-full border border-outline-variant/40 flex items-center justify-center hover:bg-surface-container-low transition-colors text-on-surface-variant">
-                            <span class="material-symbols-outlined text-[20px]">bookmark</span>
+                        <button onclick="toggleBookmark(this, '{{ $post->slug }}')" data-bookmark-slug="{{ $post->slug }}"
+                            class="w-10 h-10 rounded-full border border-outline-variant/40 flex items-center justify-center hover:bg-surface-container-low transition-colors {{ $isBookmarked ? 'text-primary' : 'text-on-surface-variant' }}">
+                            <span class="material-symbols-outlined text-[20px]" {!! $isBookmarked ? 'style="font-variation-settings: \'FILL\' 1;"' : '' !!}>bookmark</span>
                         </button>
                         <button
                             class="w-10 h-10 rounded-full border border-outline-variant/40 flex items-center justify-center hover:bg-surface-container-low transition-colors text-on-surface-variant">
@@ -114,16 +114,94 @@
                         @endforeach
                     </div>
                     <div class="flex items-center gap-6">
-                        <button
-                            class="flex items-center gap-2 text-on-surface-variant hover:text-primary transition-colors font-label-md text-label-md">
-                            <span class="material-symbols-outlined text-[20px]">favorite</span> 1.2k
+                        <button onclick="toggleLike(this, '{{ $post->slug }}')" data-like-slug="{{ $post->slug }}"
+                            class="flex items-center gap-2 transition-colors font-label-md text-label-md {{ $isLiked ? 'text-primary' : 'text-on-surface-variant hover:text-primary' }}">
+                            <span class="material-symbols-outlined text-[20px]" {!! $isLiked ? 'style="font-variation-settings: \'FILL\' 1;"' : '' !!}>favorite</span>
+                            <span class="like-count">{{ $post->likes_count }}</span>
                         </button>
-                        <button
-                            class="flex items-center gap-2 text-on-surface-variant hover:text-primary transition-colors font-label-md text-label-md">
-                            <span class="material-symbols-outlined text-[20px]">chat_bubble</span> 84
-                        </button>
+                        <a href="#comments"
+                            class="flex items-center gap-2 text-on-surface-variant hover:text-primary transition-colors font-label-md text-label-md cursor-pointer">
+                            <span class="material-symbols-outlined text-[20px]">chat_bubble</span> 
+                            <span>{{ $post->comments_count }}</span>
+                        </a>
                     </div>
                 </div>
+
+                <!-- Comments Section -->
+                <section id="comments" class="mt-16 pt-10 border-t border-outline-variant/30">
+                    <h3 class="font-headline-md text-headline-md text-on-surface mb-8">
+                        Responses ({{ $post->comments_count }})
+                    </h3>
+
+                    @auth
+                        <!-- Comment Form -->
+                        <form action="{{ route('posts.comments.store', $post->slug) }}" method="POST" class="mb-10 flex gap-4 items-start">
+                            @csrf
+                            <img class="w-10 h-10 rounded-full object-cover shadow-sm"
+                                alt="{{ auth()->user()->name }}"
+                                src="{{ auth()->user()->avatar ? Storage::url(auth()->user()->avatar) : 'https://ui-avatars.com/api/?name=' . urlencode(auth()->user()->name) . '&background=8b0e0f&color=fff' }}">
+                            <div class="flex-1">
+                                <textarea name="content" rows="3" required
+                                    placeholder="What are your thoughts?"
+                                    class="w-full bg-surface-container-low text-on-surface border border-outline-variant/20 rounded-xl px-4 py-3 placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all text-body-md"></textarea>
+                                <div class="mt-2 flex justify-end">
+                                    <button type="submit"
+                                        class="bg-primary text-on-primary px-6 py-2 rounded-full font-label-md text-label-md font-bold hover:bg-primary-container transition-all active:scale-[0.98] flex items-center gap-1 shadow-sm">
+                                        Respond
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    @else
+                        <!-- Sign In Prompt -->
+                        <div class="bg-surface-container-low p-6 rounded-xl border border-outline-variant/10 text-center mb-10">
+                            <p class="text-on-surface-variant font-body-md mb-3">Join the conversation. Sign in to leave a response.</p>
+                            <a href="{{ route('login') }}"
+                                class="inline-block bg-primary text-on-primary px-6 py-2 rounded-full font-label-md text-label-md font-bold hover:bg-primary-container transition-all">
+                                Sign In
+                            </a>
+                        </div>
+                    @endauth
+
+                    <!-- Comments List -->
+                    <div class="space-y-6">
+                        @forelse($comments as $comment)
+                            <div class="flex gap-4 items-start pb-6 border-b border-outline-variant/10 last:border-b-0">
+                                <a href="{{ route('profile', $comment->user->username) }}">
+                                    <img class="w-10 h-10 rounded-full object-cover shadow-sm hover:opacity-90 transition-opacity"
+                                        alt="{{ $comment->user->name }}"
+                                        src="{{ $comment->user->avatar ? Storage::url($comment->user->avatar) : 'https://ui-avatars.com/api/?name=' . urlencode($comment->user->name) . '&background=8b0e0f&color=fff' }}">
+                                </a>
+                                <div class="flex-1">
+                                    <div class="flex items-center justify-between mb-1">
+                                        <div>
+                                            <a href="{{ route('profile', $comment->user->username) }}" class="font-bold text-on-surface hover:text-primary transition-colors text-[14px]">
+                                                {{ $comment->user->name }}
+                                            </a>
+                                            <span class="text-on-surface-variant/60 text-[12px] ml-2">
+                                                {{ $comment->created_at->diffForHumans() }}
+                                            </span>
+                                        </div>
+                                        @if(auth()->check() && (auth()->id() === $comment->user_id || auth()->id() === $post->user_id))
+                                            <form action="{{ route('comments.destroy', $comment->id) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this response?');">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="text-on-surface-variant/50 hover:text-error transition-colors">
+                                                    <span class="material-symbols-outlined text-[18px]">delete</span>
+                                                </button>
+                                            </form>
+                                        @endif
+                                    </div>
+                                    <p class="text-on-surface text-body-md leading-relaxed whitespace-pre-line">
+                                        {{ $comment->content }}
+                                    </p>
+                                </div>
+                            </div>
+                        @empty
+                            <p class="text-center text-on-surface-variant/60 font-body-md py-4">No responses yet. Be the first to share your thoughts!</p>
+                        @endforelse
+                    </div>
+                </section>
             </div>
         </main>
         <!-- More From Paperink (Simple Bento) -->
